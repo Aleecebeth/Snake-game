@@ -14,44 +14,28 @@ let isMusicPlaying = false; // Variable para verificar si la música está repro
 let highScore = localStorage.getItem("high-score") || 0;
 highScoreElement.innerText = `Puntuacion maxima: ${highScore}`;
 
-// Función para cargar un archivo de audio mediante promesa
-const loadSound = (url) => {
-    return new Promise((resolve, reject) => {
-        const audio = new Audio(url);
-        audio.onloadeddata = () => resolve(audio);
-        audio.onerror = reject;
-    });
-};
+// Crear un objeto de sonido para la música de fondo
+const backgroundMusic = new Audio('sfx/musicbackground.mp3');
+backgroundMusic.loop = true;
 
-// Variables para los sonidos
-let backgroundMusic, comerSonido, gameOverSound;
+// Crear un objeto de sonido para el efecto de comer
+const comerSonido = new Audio('sfx/eatf.mp3');
 
-// Cargar los sonidos
-Promise.all([
-    loadSound('sfx/musicbackground.mp3'),
-    loadSound('eatf.mp3'),
-    loadSound('sfx/gameoversound.mp3') // Agregar el sonido de game over aquí
-]).then(([background, comer, gameover]) => {
-    backgroundMusic = background;
-    backgroundMusic.loop = true;
-    comerSonido = comer;
-    gameOverSound = gameover; // Asignar el sonido de game over
-}).catch(error => {
-    console.error('Error al cargar los sonidos:', error);
-});
+// Crear un objeto de sonido para el efecto de game over
+const gameOverSound = new Audio('sfx/gameoversound.mp3');
 
 const updateFoodPosition = () => {
     foodX = Math.floor(Math.random() * 30) + 1;
     foodY = Math.floor(Math.random() * 30) + 1;
-};
+}
 
 const handleGameOver = () => {
     clearInterval(setIntervalId);
-    backgroundMusic.pause(); // Pausar la música de fondo
-    gameOverSound.play(); // Reproducir el sonido de game over
+    gameOverSound.play();
+    backgroundMusic.pause();
     alert("Game Over! Pulsa ok para volver a jugar...");
     location.reload();
-};
+}
 
 const changeDirection = e => {
     if(e.key === "ArrowUp" && velocityY != 1) {
@@ -73,26 +57,26 @@ const changeDirection = e => {
         backgroundMusic.play();
         isMusicPlaying = true;
     }
-};
+}
 
 let startX, startY, endX, endY;
 
 const handleTouchStart = e => {
-    e.preventDefault();  // Prevenir la acción predeterminada para detener el desplazamiento
+    e.preventDefault();  // Prevenir la acción por defecto para detener el desplazamiento
     const touch = e.touches[0];
     startX = touch.clientX;
     startY = touch.clientY;
-};
+}
 
 const handleTouchMove = e => {
-    e.preventDefault();  // Prevenir la acción predeterminada para detener el desplazamiento
+    e.preventDefault();  // Prevenir la acción por defecto para detener el desplazamiento
     const touch = e.touches[0];
     endX = touch.clientX;
     endY = touch.clientY;
-};
+}
 
 const handleTouchEnd = e => {
-    e.preventDefault();  // Prevenir la acción predeterminada para detener el desplazamiento
+    e.preventDefault();  // Prevenir la acción por defecto para detener el desplazamiento
     const deltaX = endX - startX;
     const deltaY = endY - startY;
 
@@ -121,7 +105,7 @@ const handleTouchEnd = e => {
         backgroundMusic.play();
         isMusicPlaying = true;
     }
-};
+}
 
 const initGame = () => {
     if(gameOver) return handleGameOver();
@@ -147,29 +131,22 @@ const initGame = () => {
     }
     snakeBody[0] = [snakeX, snakeY]; 
 
-    // Verificar colisión con la pared
     if(snakeX <= 0 || snakeX > 30 || snakeY <= 0 || snakeY > 30) {
         gameOver = true;
-    }
-
-    // Verificar colisión consigo mismo
-    for (let i = 1; i < snakeBody.length; i++) {
-        if (snakeX === snakeBody[i][0] && snakeY === snakeBody[i][1]) {
-            gameOver = true;
-            break;
-        }
-    }
-
-    if(gameOver) {
         handleGameOver();
         return;
     }
 
     for (let i = 0; i < snakeBody.length; i++) {
         html += `<div class="head" style="grid-area: ${snakeBody[i][1]} / ${snakeBody[i][0]}"></div>`;
+        if (i !== 0 && snakeBody[0][1] === snakeBody[i][1] && snakeBody[0][0] === snakeBody[i][0]) {
+            gameOver = true;
+            handleGameOver();
+            return;
+        }
     }
     playBoard.innerHTML = html;
-};
+}
 
 updateFoodPosition();
 setIntervalId = setInterval(initGame, 100);
